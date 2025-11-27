@@ -7,7 +7,7 @@ await build({
   bundle: true,
   platform: 'neutral',
   outfile: './dist/index.js',
-  conditions: [ 'fastly', 'edge-light' ],
+  conditions: [ 'fastly' ],
   external: [ 'fastly:*' ],
   minify: production,
 });

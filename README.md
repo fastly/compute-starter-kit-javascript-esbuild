@@ -12,11 +12,11 @@ Learn how to use [esbuild](https://esbuild.github.io) to bundle modules for the 
 * Provides a starting point for an esbuild configuration for use with Fastly Compute.
 * Demonstrates transpiling [JSX syntax](https://facebook.github.io/jsx/) to JavaScript during bundling.
 
-The example source code is a JSX file and holds dependencies on `react` and `react-dom`. It demonstrates serialization of a React component into a stream, served as a synthesized response from a Compute application.
+The example source code is a JSX file and holds dependencies on `react` and `react-dom/server.edge` (this is a build of `react-dom/server` designed for edge runtimes such as Fastly Compute). It demonstrates serialization of a React component into a stream, served as a synthesized response from a Compute application.
 
 ```jsx
 import * as React from 'react';
-import * as Server from 'react-dom/server';
+import * as Server from 'react-dom/server.edge';
 
 const Greet = () => <h1>Hello, world!</h1>;
 return new Response(
@@ -49,7 +49,6 @@ At minimum, the configuration to bundle a Compute application for `esbuild` shou
 * `outfile` - Tells esbuild where to place the output bundled file, `./dist/index.js` in this app.
 * `external` - Set to `[ 'fastly:*', ]`. Indicates to esbuild that `fastly:` imports should be looked up as external imports rather than modules under `node_modules`.
 * `conditions` - Set to `['fastly']`.
-  * If you're using `react-dom`, use `['fastly', 'edge-light']`.
 
 ```javascript
 import { build } from 'esbuild';
@@ -60,7 +59,7 @@ await build({
   platform: 'neutral',
   outfile: './dist/index.js',
   external: [ 'fastly:*' ],
-  conditions: [ 'fastly', 'edge-light' ],
+  conditions: [ 'fastly' ],
 });
 ```
 
@@ -102,14 +101,7 @@ The starter kit's `package.json` file sets [`"type": "module"`](https://nodejs.o
 
 ### Conditional exports
 
-The starter kit is configured to use the condition names `fastly` and `edge-light` when resolving modules ([`conditions`](https://esbuild.github.io/api/#conditions)). These are taken into consideration during the bundling process when esbuild encounters a package that [defines conditional exports](https://nodejs.org/api/packages.html#conditional-exports).
-
-For example, the `index.jsx` file in the starter kit declares an import on `react-dom/server`:
-```js
-import Server from 'react-dom/server'; 
-```
-
-Because the condition name `edge-light` matches against one of the conditional exports listed in `react-dom`'s `package.json`, esbuild resolves the package's entry point to a version of `react-dom` built for the edge.
+The starter kit is configured to use the condition names `fastly` when resolving modules ([`conditions`](https://esbuild.github.io/api/#conditions)). These are taken into consideration during the bundling process when esbuild encounters a package that [defines conditional exports](https://nodejs.org/api/packages.html#conditional-exports).
 
 ## Running the application
 
@@ -147,8 +139,7 @@ This starter kit is configured to use additional packages to demonstrate the tra
 If your application does not need React or JSX, you may remove this functionality using the following steps:
 1. Rename the `index.jsx` file to `index.js`, and remove all code that uses the JSX syntax or that refers to the `react` and `react-dom` packages.
 2. In `esbuild.config.js`, modify the `entryFiles` field from `['./src/index.jsx']` to `['./src/index.js']` to reflect this file name change.
-3. In `esbuild.config.js`, remove `'edge-light'` from the `conditions` array.
-4. Remove the following dependencies from your application:
+3. Remove the following dependencies from your application:
    ```shell
    npm uninstall react react-dom
    ```
